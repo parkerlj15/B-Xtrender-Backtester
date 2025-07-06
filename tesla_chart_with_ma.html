@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tesla Stock Chart with Moving Averages - TradingView Lightweight Charts</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .header p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+        }
+        .chart-container {
+            padding: 20px;
+        }
+        #chart {
+            width: 100%;
+            height: 500px;
+        }
+        .controls {
+            padding: 0 20px 20px 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+        }
+        .control-group label {
+            font-weight: 500;
+            color: #333;
+            margin-right: 8px;
+        }
+        button {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        button:hover {
+            background: #f8f9fa;
+        }
+        button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .ma-controls {
+            display: flex;
+            gap: 5px;
+        }
+        .ma-button {
+            padding: 6px 12px;
+            font-size: 13px;
+            border-radius: 3px;
+        }
+        .ma-button.ma-20 { border-left: 3px solid #FF6B6B; }
+        .ma-button.ma-50 { border-left: 3px solid #4ECDC4; }
+        .ma-button.ma-200 { border-left: 3px solid #45B7D1; }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .attribution {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+        .attribution a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .legend {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            font-size: 12px;
+            z-index: 1000;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 2px 0;
+        }
+        .legend-color {
+            width: 12px;
+            height: 2px;
+            margin-right: 6px;
+            border-radius: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📈 Tesla Stock Chart with Moving Averages (TSLA)</h1>
+            <p>5-Year Historical Data with SMA indicators | Powered by TradingView Lightweight Charts</p>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>Chart Type:</label>
+                <button id="candlestick" class="chart-type active">Candlestick</button>
+                <button id="line" class="chart-type">Line</button>
+                <button id="area" class="chart-type">Area</button>
+            </div>
+            
+            <div class="control-group">
+                <label>Moving Averages:</label>
+                <div class="ma-controls">
+                    <button id="ma-20" class="ma-button ma-20">SMA 20</button>
+                    <button id="ma-50" class="ma-button ma-50">SMA 50</button>
+                    <button id="ma-200" class="ma-button ma-200">SMA 200</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <button id="fitContent">Fit Content</button>
+                <button id="resetZoom">Reset Zoom</button>
+            </div>
+        </div>
+        
+        <div class="chart-container" style="position: relative;">
+            <div id="loading" class="loading">Loading Tesla stock data...</div>
+            <div id="chart"></div>
+            <div id="legend" class="legend" style="display: none;"></div>
+        </div>
+        
+        <div class="attribution">
+            Charts powered by <a href="https://www.tradingview.com" target="_blank">TradingView</a> |
+            Data visualization created with TradingView Lightweight Charts™
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <script>
+        // Simple Moving Average calculation utility
+        class MovingAverageCalculator {
+            static calculateSMA(data, period, source = 'close') {
+                if (data.length < period) return [];
+                
+                const result = [];
+                
+                for (let i = period - 1; i < data.length; i++) {
+                    let sum = 0;
+                    for (let j = 0; j < period; j++) {
+                        sum += data[i - j][source];
+                    }
+                    const average = sum / period;
+                    
+                    result.push({
+                        time: data[i].time,
+                        value: average
+                    });
+                }
+                
+                return result;
+            }
+        }
+
+        // Moving Average Series Manager
+        class MovingAverageManager {
+            constructor(chart) {
+                this.chart = chart;
+                this.maSeries = new Map();
+                this.maConfigs = {
+                    20: { color: '#FF6B6B', lineWidth: 2, title: 'SMA 20' },
+                    50: { color: '#4ECDC4', lineWidth: 2, title: 'SMA 50' },
+                    200: { color: '#45B7D1', lineWidth: 2, title: 'SMA 200' }
+                };
+                this.activeMA = new Set();
+            }
+
+            addMA(period, data) {
+                if (this.maSeries.has(period)) {
+                    return; // Already exists
+                }
+
+                const config = this.maConfigs[period];
+                const series = this.chart.addSeries(LightweightCharts.LineSeries, {
+                    color: config.color,
+                    lineWidth: config.lineWidth,
+                    priceFormat: {
+                        type: 'price',
+                        precision: 2,
+                        minMove: 0.01,
+                    },
+                    title: config.title
+                });
+
+                const maData = MovingAverageCalculator.calculateSMA(data, period);
+                series.setData(maData);
+                
+                this.maSeries.set(period, series);
+                this.activeMA.add(period);
+                
+                return series;
+            }
+
+            removeMA(period) {
+                if (!this.maSeries.has(period)) {
+                    return;
+                }
+
+                this.chart.removeSeries(this.maSeries.get(period));
+                this.maSeries.delete(period);
+                this.activeMA.delete(period);
+            }
+
+            toggleMA(period, data) {
+                if (this.activeMA.has(period)) {
+                    this.removeMA(period);
+                    return false;
+                } else {
+                    this.addMA(period, data);
+                    return true;
+                }
+            }
+
+            updateAllMA(data) {
+                for (const period of this.activeMA) {
+                    const series = this.maSeries.get(period);
+                    if (series) {
+                        const maData = MovingAverageCalculator.calculateSMA(data, period);
+                        series.setData(maData);
+                    }
+                }
+            }
+
+            removeAllMA() {
+                for (const period of this.activeMA) {
+                    this.removeMA(period);
+                }
+            }
+
+            getActiveMA() {
+                return Array.from(this.activeMA);
+            }
+        }
+
+        class TeslaStockChart {
+            constructor() {
+                this.chart = null;
+                this.candlestickSeries = null;
+                this.lineSeries = null;
+                this.areaSeries = null;
+                this.currentSeriesType = 'candlestick';
+                this.data = [];
+                this.maManager = null;
+                
+                this.init();
+            }
+
+            async init() {
+                try {
+                    await this.loadData();
+                    this.createChart();
+                    this.maManager = new MovingAverageManager(this.chart);
+                    this.setupEventListeners();
+                    this.updateLegend();
+                    this.hideLoading();
+                } catch (error) {
+                    console.error('Error initializing chart:', error);
+                    document.getElementById('loading').textContent = 'Error loading chart data.';
+                }
+            }
+
+            async loadData() {
+                try {
+                    const response = await fetch('/api/tesla-data');
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (!result.success) {
+                        throw new Error(result.error || 'Failed to load data');
+                    }
+                    
+                    this.data = result.data;
+                    console.log(`Loaded ${this.data.length} data points for ${result.symbol}`);
+                } catch (error) {
+                    console.error('Error loading Tesla data:', error);
+                    throw error;
+                }
+            }
+
+            createChart() {
+                const chartOptions = {
+                    layout: {
+                        textColor: '#333',
+                        background: { type: 'solid', color: 'white' }
+                    },
+                    width: 0,
+                    height: 500,
+                    timeScale: {
+                        borderColor: '#D1D4DC',
+                        timeVisible: true,
+                        secondsVisible: false,
+                    },
+                    rightPriceScale: {
+                        borderColor: '#D1D4DC',
+                        scaleMargins: {
+                            top: 0.1,
+                            bottom: 0.1,
+                        },
+                    },
+                    grid: {
+                        vertLines: { color: '#F0F3FA' },
+                        horzLines: { color: '#F0F3FA' },
+                    },
+                    crosshair: {
+                        mode: LightweightCharts.CrosshairMode.Normal,
+                    },
+                };
+
+                this.chart = LightweightCharts.createChart(document.getElementById('chart'), chartOptions);
+                
+                this.createCandlestickSeries();
+                this.chart.timeScale().fitContent();
+                
+                // Auto-resize
+                window.addEventListener('resize', () => {
+                    this.chart.applyOptions({ width: 0 });
+                });
+            }
+
+            createCandlestickSeries() {
+                this.candlestickSeries = this.chart.addSeries(LightweightCharts.CandlestickSeries, {
+                    upColor: '#26a69a',
+                    downColor: '#ef5350',
+                    borderVisible: false,
+                    wickUpColor: '#26a69a',
+                    wickDownColor: '#ef5350',
+                    priceFormat: {
+                        type: 'price',
+                        precision: 2,
+                        minMove: 0.01,
+                    },
+                });
+                
+                this.candlestickSeries.setData(this.data);
+            }
+
+            createLineSeries() {
+                this.lineSeries = this.chart.addSeries(LightweightCharts.LineSeries, {
+                    color: '#2962FF',
+                    lineWidth: 2,
+                    priceFormat: {
+                        type: 'price',
+                        precision: 2,
+                        minMove: 0.01,
+                    },
+                });
+                
+                const lineData = this.data.map(item => ({
+                    time: item.time,
+                    value: item.close
+                }));
+                
+                this.lineSeries.setData(lineData);
+            }
+
+            createAreaSeries() {
+                this.areaSeries = this.chart.addSeries(LightweightCharts.AreaSeries, {
+                    lineColor: '#2962FF',
+                    topColor: 'rgba(41, 98, 255, 0.4)',
+                    bottomColor: 'rgba(41, 98, 255, 0.1)',
+                    lineWidth: 2,
+                    priceFormat: {
+                        type: 'price',
+                        precision: 2,
+                        minMove: 0.01,
+                    },
+                });
+                
+                const areaData = this.data.map(item => ({
+                    time: item.time,
+                    value: item.close
+                }));
+                
+                this.areaSeries.setData(areaData);
+            }
+
+            switchSeriesType(type) {
+                // Store active MAs before switching
+                const activeMAs = this.maManager.getActiveMA();
+                
+                // Remove current series
+                if (this.candlestickSeries) {
+                    this.chart.removeSeries(this.candlestickSeries);
+                    this.candlestickSeries = null;
+                }
+                if (this.lineSeries) {
+                    this.chart.removeSeries(this.lineSeries);
+                    this.lineSeries = null;
+                }
+                if (this.areaSeries) {
+                    this.chart.removeSeries(this.areaSeries);
+                    this.areaSeries = null;
+                }
+
+                // Create new series based on type
+                switch(type) {
+                    case 'candlestick':
+                        this.createCandlestickSeries();
+                        break;
+                    case 'line':
+                        this.createLineSeries();
+                        break;
+                    case 'area':
+                        this.createAreaSeries();
+                        break;
+                }
+                
+                // Restore active MAs
+                this.maManager.updateAllMA(this.data);
+                
+                this.currentSeriesType = type;
+                this.updateLegend();
+            }
+
+            updateLegend() {
+                const legend = document.getElementById('legend');
+                const activeMAs = this.maManager.getActiveMA();
+                
+                if (activeMAs.length === 0) {
+                    legend.style.display = 'none';
+                    return;
+                }
+                
+                legend.style.display = 'block';
+                legend.innerHTML = activeMAs.map(period => {
+                    const config = this.maManager.maConfigs[period];
+                    return `
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: ${config.color}"></div>
+                            <span>${config.title}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            setupEventListeners() {
+                // Chart type buttons
+                document.querySelectorAll('.chart-type').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        document.querySelectorAll('.chart-type').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.switchSeriesType(e.target.id);
+                    });
+                });
+
+                // Moving Average buttons
+                document.querySelectorAll('.ma-button').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const period = parseInt(e.target.id.split('-')[1]);
+                        const isActive = this.maManager.toggleMA(period, this.data);
+                        
+                        if (isActive) {
+                            e.target.classList.add('active');
+                        } else {
+                            e.target.classList.remove('active');
+                        }
+                        
+                        this.updateLegend();
+                    });
+                });
+
+                // Control buttons
+                document.getElementById('fitContent').addEventListener('click', () => {
+                    this.chart.timeScale().fitContent();
+                });
+
+                document.getElementById('resetZoom').addEventListener('click', () => {
+                    this.chart.timeScale().resetTimeScale();
+                });
+            }
+
+            hideLoading() {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('chart').style.display = 'block';
+            }
+        }
+
+        // Initialize the chart when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new TeslaStockChart();
+        });
+    </script>
+</body>
+</html> 
