@@ -8,14 +8,24 @@ const PORT = 3001;
 // Serve static files
 app.use(express.static('.'));
 
-// Serve the main chart page (with moving averages)
+// Serve the main dashboard page
 app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Serve the moving averages chart page  
+app.get('/moving-averages', (req, res) => {
     res.sendFile(path.join(__dirname, 'tesla_chart_with_ma.html'));
 });
 
 // Serve the original chart page (without moving averages)
 app.get('/basic', (req, res) => {
     res.sendFile(path.join(__dirname, 'tesla_chart.html'));
+});
+
+// Serve the BX trender chart page
+app.get('/bx-trender', (req, res) => {
+    res.sendFile(path.join(__dirname, 'tesla_chart_with_bx.html'));
 });
 
 // API endpoint to serve CSV data as JSON
@@ -69,11 +79,14 @@ app.listen(PORT, () => {
     console.log('   • Interactive candlestick charts');
     console.log('   • Line and area chart views');
     console.log('   • Simple Moving Averages (SMA 20, 50, 200)');
+    console.log('   • B-Xtrender momentum oscillator');
     console.log('   • 5 years of Tesla (TSLA) historical data');
     console.log('   • Zoom and pan functionality');
     console.log('   • Responsive design');
     console.log('\n🔗 Available endpoints:');
-    console.log('   • / - Enhanced chart with moving averages');
+    console.log('   • / - Dashboard with chart selection');
+    console.log('   • /moving-averages - Enhanced chart with moving averages');
+    console.log('   • /bx-trender - Chart with B-Xtrender indicator');
     console.log('   • /basic - Original chart without indicators');
     console.log('\nPress Ctrl+C to stop the server');
 });
