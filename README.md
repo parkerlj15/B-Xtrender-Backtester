@@ -1,15 +1,19 @@
-# Tesla B-Xtrender Backtester
+# B-Xtrender Backtester
 
-A specialized backtesting platform for Tesla (TSLA) stock analysis using the B-Xtrender oscillating histogram indicator. This implementation provides TradingView-compatible calculations with 99%+ accuracy.
+A comprehensive backtesting platform for stock analysis using the B-Xtrender oscillating histogram indicator. This implementation provides TradingView-compatible calculations with 99%+ accuracy and supports custom data uploads for any stock.
 
 ## 🎯 Features
 
 - **B-Xtrender Oscillating Histogram**: Advanced momentum oscillator for trend reversal detection
 - **TradingView Compatible**: Uses identical EMA initialization and RSI calculations as TradingView
 - **High Accuracy**: 99%+ match with TradingView values
+- **Custom Data Upload**: Upload your own CSV files for any stock analysis
 - **Interactive Charts**: Built with TradingView Lightweight Charts
-- **Historical Data**: 5 years of Tesla (TSLA) historical data
+- **Multiple Chart Types**: Candlestick, Line, and Area views
+- **Historical Data**: Includes 5 years of Tesla (TSLA) and NVIDIA (NVDA) historical data
+- **Dynamic Data Source**: Switch between default data and uploaded files seamlessly
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
+- **Real-time Feedback**: Upload status and error handling with user feedback
 
 ## 🔧 Technical Details
 
@@ -62,11 +66,13 @@ Navigate to `http://localhost:3001`
 B-Xtrender-Backtester/
 ├── indicators/
 │   └── bx-indicator.js          # B-Xtrender oscillating histogram implementation
+├── uploads/                     # Directory for uploaded CSV files
 ├── tesla_chart_with_bx.html     # Main chart interface
-├── index.html                   # Landing page
-├── chart_server.js              # Express server
+├── index.html                   # Landing page and dashboard
+├── chart_server.js              # Express server with file upload support
 ├── package.json                 # Node.js dependencies
 ├── TSLA_5Y_FROM_PERPLEXITY.csv  # Tesla historical data
+├── NVDA_5Y_FROM_PERPLEXITY.csv  # NVIDIA historical data
 ├── pine.txt                     # TradingView Pine Script reference
 └── README.md                    # This file
 ```
@@ -82,6 +88,32 @@ B-Xtrender-Backtester/
 - **Chart Types**: Switch between Candlestick, Line, and Area chart views
 - **Zoom & Pan**: Use mouse wheel to zoom, drag to pan across time periods
 - **Fit Content**: Auto-fit the chart to show all data
+
+### File Upload Feature
+- **Upload Custom Data**: Click "Choose File" to upload your own CSV stock data
+- **Supported Format**: CSV files with Date, Open, High, Low, Close columns (Volume optional)
+- **File Size Limit**: Maximum 10MB per file
+- **Data Source Indicator**: Shows which data source is currently active
+- **Reset Data**: Use "Reset to Default Data" to return to Tesla data
+- **Real-time Updates**: Chart automatically refreshes with new data after upload
+
+### CSV File Format
+Your CSV file should have the following structure:
+```csv
+Date,Open,High,Low,Close,Volume
+2024-01-01,100.00,105.00,99.00,103.00,1000000
+2024-01-02,103.00,108.00,102.00,107.00,1200000
+```
+
+**Required columns:**
+- `Date`: Date in YYYY-MM-DD format
+- `Open`: Opening price
+- `High`: Highest price
+- `Low`: Lowest price
+- `Close`: Closing price
+
+**Optional columns:**
+- `Volume`: Trading volume
 
 ### Interpretation
 - **Above Zero**: Bullish momentum
@@ -101,12 +133,8 @@ const calculator = new BXHistogramCalculator({
 });
 ```
 
-### Update Data
-Replace `TSLA_5Y_FROM_PERPLEXITY.csv` with your own CSV data in format:
-```csv
-Date,Open,High,Low,Close,Volume
-2024-01-01,100.00,105.00,99.00,103.00,1000000
-```
+### Update Default Data
+Replace `TSLA_5Y_FROM_PERPLEXITY.csv` with your own CSV data or use the upload feature for temporary analysis.
 
 ## 🏗️ Implementation Details
 
@@ -120,28 +148,47 @@ Date,Open,High,Low,Close,Volume
 - Initial values calculated with Simple Moving Average
 - Subsequent values use exponential smoothing
 
+### File Upload System
+- **Multer Middleware**: Handles multipart/form-data uploads
+- **CSV Validation**: Validates file format and required columns
+- **Security**: File size limits and safe file handling
+- **Dynamic Switching**: Seamless transition between data sources
+
 ### Visualization
 - Separate oscillator panel below main chart
 - Histogram bars with dynamic coloring
 - Zero line reference for trend identification
+- Dynamic chart titles based on data source
 
 ## 📊 API Endpoints
 
+### Data Endpoints
 - `GET /` - Main dashboard
 - `GET /bx-trender` - B-Xtrender chart interface
-- `GET /api/tesla-data` - Tesla historical data (JSON format)
+- `GET /api/tesla-data` - Historical data (JSON format, prioritizes uploaded data)
+
+### File Upload Endpoints
+- `POST /api/upload-data` - Upload CSV file for analysis
+- `GET /api/data-info` - Get information about current data source
+- `DELETE /api/delete-uploaded-data` - Remove uploaded data and reset to default
 
 ## 🔧 Development
 
 ### File Structure
 - **Frontend**: HTML/CSS/JavaScript with TradingView Lightweight Charts
-- **Backend**: Express.js server for data serving
-- **Data**: CSV file with historical OHLCV data
+- **Backend**: Express.js server with multer for file uploads
+- **Data**: CSV files with historical OHLCV data
 
 ### Key Classes
 - `BXHistogramCalculator`: Core calculation engine
 - `BXHistogramManager`: Chart integration and management
 - `TechnicalAnalysisUtils`: EMA and RSI utility functions
+
+### File Upload Security
+- File size validation (10MB limit)
+- CSV format validation
+- Safe file handling and storage
+- Error handling and user feedback
 
 ## 📈 Accuracy Validation
 
@@ -155,7 +202,7 @@ The implementation has been validated against TradingView with the following res
 - **Original Concept**: Bharat Jhunjhunwala (IFTA Journal)
 - **TradingView Pine Script**: @Puppytherapy
 - **JavaScript Implementation**: Custom port for TradingView Lightweight Charts
-- **Data Source**: Perplexity AI (Tesla 5Y historical data)
+- **Data Source**: Perplexity AI (Tesla & NVIDIA 5Y historical data)
 
 ## 📄 License
 
