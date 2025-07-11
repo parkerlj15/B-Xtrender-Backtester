@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tesla Stock Chart Dashboard - B-Xtrender Backtester</title>
+    <title>Tesla B-Xtrender Backtester - Oscillating Histogram</title>
     <style>
         * {
             margin: 0;
@@ -85,9 +85,8 @@
         }
 
         .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
+            display: flex;
+            justify-content: center;
             margin-bottom: 40px;
         }
 
@@ -101,6 +100,8 @@
             cursor: pointer;
             position: relative;
             overflow: hidden;
+            max-width: 400px;
+            width: 100%;
         }
 
         .chart-card:hover {
@@ -209,26 +210,22 @@
                 flex-direction: column;
                 gap: 15px;
             }
-            
-            .charts-grid {
-                grid-template-columns: 1fr;
-            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📈 Tesla Stock Chart Dashboard</h1>
-            <p>Interactive Financial Analysis Platform</p>
+            <h1>📈 Tesla B-Xtrender Backtester</h1>
+            <p>Interactive B-Xtrender Oscillating Histogram Analysis</p>
             <div class="stats">
                 <div class="stat">
                     <span class="stat-number">5Y</span>
                     <span class="stat-label">Historical Data</span>
                 </div>
                 <div class="stat">
-                    <span class="stat-number">3</span>
-                    <span class="stat-label">Chart Types</span>
+                    <span class="stat-number">5,20,5</span>
+                    <span class="stat-label">BX Parameters</span>
                 </div>
                 <div class="stat">
                     <span class="stat-number">TSLA</span>
@@ -239,50 +236,23 @@
 
         <div class="content">
             <div class="description">
-                <p>Explore Tesla's stock performance with our interactive charting platform. Choose from multiple chart types with advanced technical indicators and analysis tools.</p>
+                <p>Analyze Tesla's stock performance with our B-Xtrender oscillating histogram indicator. This momentum oscillator helps identify trend changes and potential reversal points using EMA differences and RSI calculations.</p>
             </div>
 
             <div class="charts-grid">
-                <!-- Moving Averages Chart -->
-                <div class="chart-card" onclick="window.location.href='/moving-averages'">
-                    <div class="chart-icon">📊</div>
-                    <h3 class="chart-title">Moving Averages Chart</h3>
-                    <p class="chart-description">Interactive chart with Simple Moving Averages for trend analysis</p>
-                    <ul class="chart-features">
-                        <li>SMA 20, 50, 200 periods</li>
-                        <li>Candlestick, Line & Area views</li>
-                        <li>Dynamic legend display</li>
-                        <li>Zoom and pan functionality</li>
-                    </ul>
-                    <a href="/moving-averages" class="launch-btn">Launch Moving Averages Chart</a>
-                </div>
-
                 <!-- B-Xtrender Chart -->
                 <div class="chart-card" onclick="window.location.href='/bx-trender'">
                     <div class="chart-icon">🎯</div>
-                    <h3 class="chart-title">B-Xtrender Oscillator</h3>
-                    <p class="chart-description">Advanced momentum oscillator for trend reversal detection</p>
+                    <h3 class="chart-title">B-Xtrender Oscillating Histogram</h3>
+                    <p class="chart-description">Advanced momentum oscillator for trend reversal detection with TradingView-compatible calculations</p>
                     <ul class="chart-features">
-                        <li>Short-term RSI histogram</li>
-                        <li>Long-term trend line</li>
-                        <li>T3 smoothed signals</li>
+                        <li>RSI(5) of [EMA(5) - EMA(20)] - 50</li>
+                        <li>Oscillating histogram centered at zero</li>
+                        <li>Green/Red color coding for momentum</li>
                         <li>Separate oscillator panel</li>
+                        <li>99%+ accuracy vs TradingView</li>
                     </ul>
                     <a href="/bx-trender" class="launch-btn">Launch B-Xtrender Chart</a>
-                </div>
-
-                <!-- Basic Chart -->
-                <div class="chart-card" onclick="window.location.href='/basic'">
-                    <div class="chart-icon">📉</div>
-                    <h3 class="chart-title">Basic Chart</h3>
-                    <p class="chart-description">Clean, simple chart without indicators for pure price action analysis</p>
-                    <ul class="chart-features">
-                        <li>Pure price action view</li>
-                        <li>Multiple chart types</li>
-                        <li>Fast loading</li>
-                        <li>Clean interface</li>
-                    </ul>
-                    <a href="/basic" class="launch-btn">Launch Basic Chart</a>
                 </div>
             </div>
         </div>

@@ -1,22 +1,33 @@
 {
   "name": "b-xtrender-backtester",
   "version": "1.0.0",
-  "main": "BX.js",
+  "description": "Tesla B-Xtrender Backtester - Oscillating Histogram Indicator with TradingView-compatible calculations",
+  "main": "chart_server.js",
   "scripts": {
+    "start": "node chart_server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vibe-coderx/B-Xtrender-Backtester.git"
   },
-  "keywords": [],
+  "keywords": [
+    "trading",
+    "backtesting",
+    "b-xtrender",
+    "tesla",
+    "tsla",
+    "technical-analysis",
+    "oscillator",
+    "histogram",
+    "tradingview"
+  ],
   "author": "",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/vibe-coderx/B-Xtrender-Backtester/issues"
   },
   "homepage": "https://github.com/vibe-coderx/B-Xtrender-Backtester#readme",
-  "description": "",
   "dependencies": {
     "express": "^5.1.0"
   }
