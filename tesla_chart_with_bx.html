@@ -136,12 +136,12 @@
         </div>
         
         <div class="info-panel">
-            <h3>B-Xtrender Indicator Information</h3>
+            <h3>B-Xtrender Oscillating Histogram Information</h3>
             <ul>
-                <li><strong>Short-term:</strong> RSI of EMA difference (Histogram)</li>
-                <li><strong>Long-term:</strong> RSI of EMA (Trend Line)</li>
-                <li><strong>Smoothed:</strong> T3 average of short-term (Color Line)</li>
-                <li><strong>Signals:</strong> Bull/Bear switches based on direction changes</li>
+                <li><strong>Calculation:</strong> RSI(5) of [EMA(5) - EMA(20)] - 50</li>
+                <li><strong>Display:</strong> Oscillating histogram centered around zero</li>
+                <li><strong>Colors:</strong> Green for positive values, Red for negative values</li>
+                <li><strong>Parameters:</strong> EMA periods (5, 20) and RSI period (5)</li>
             </ul>
         </div>
         
@@ -195,7 +195,7 @@
                 try {
                     await this.loadData();
                     this.createChart();
-                    this.bxManager = new BXIndicatorManager(document.querySelector('.chart-container'));
+                    this.bxManager = new BXHistogramManager(document.querySelector('.chart-container'));
                     this.setupEventListeners();
                     this.hideLoading();
                 } catch (error) {
@@ -353,9 +353,9 @@
                 
                 this.currentSeriesType = type;
                 
-                // Update BX indicator if active
-                if (this.bxManager && this.bxManager.isIndicatorActive()) {
-                    this.bxManager.updateBXIndicator(this.data);
+                // Update BX histogram if active
+                if (this.bxManager && this.bxManager.isHistogramActive()) {
+                    this.bxManager.updateBXHistogram(this.data);
                 }
             }
 
@@ -369,13 +369,9 @@
                     });
                 });
 
-                // BX Indicator toggle
+                // BX Histogram toggle
                 document.getElementById('bx-toggle').addEventListener('click', (e) => {
-                    const isActive = this.bxManager.toggleBXIndicator(this.data, {
-                        showShortTerm: true,
-                        showLongTerm: true,
-                        showSmoothed: true
-                    });
+                    const isActive = this.bxManager.toggleBXHistogram(this.data);
                     
                     if (isActive) {
                         e.target.classList.add('active');
