@@ -201,6 +201,89 @@
             text-decoration: underline;
         }
 
+        .upload-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 2px solid #e9ecef;
+        }
+
+        .upload-section h3 {
+            margin: 0 0 20px 0;
+            color: #333;
+            text-align: center;
+        }
+
+        .upload-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .file-status {
+            padding: 8px 15px;
+            background: #e9ecef;
+            border-radius: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .file-status.uploaded {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .upload-info {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .upload-info p {
+            font-size: 0.85em;
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .upload-feedback {
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .upload-feedback.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .upload-feedback.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 2em;
@@ -209,6 +292,11 @@
             .stats {
                 flex-direction: column;
                 gap: 15px;
+            }
+
+            .upload-container {
+                flex-direction: column;
+                text-align: center;
             }
         }
     </style>
@@ -236,7 +324,22 @@
 
         <div class="content">
             <div class="description">
-                <p>Analyze Tesla's stock performance with our B-Xtrender oscillating histogram indicator. This momentum oscillator helps identify trend changes and potential reversal points using EMA differences and RSI calculations.</p>
+                <p>Analyze stock performance with our B-Xtrender oscillating histogram indicator. Upload your own CSV data or use the default Tesla data to analyze trend changes and potential reversal points.</p>
+            </div>
+
+            <!-- File Upload Section -->
+            <div class="upload-section">
+                <h3>📁 Upload Your Own Data</h3>
+                <div class="upload-container">
+                    <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+                    <button id="uploadBtn" class="upload-btn">Choose CSV File</button>
+                    <span id="fileStatus" class="file-status">Using default Tesla data</span>
+                </div>
+                <div class="upload-info">
+                    <p><strong>CSV Format:</strong> Date, Open, High, Low, Close, Volume (Volume optional)</p>
+                    <p><strong>Date Format:</strong> YYYY-MM-DD or similar standard formats</p>
+                </div>
+                <div id="uploadFeedback" class="upload-feedback"></div>
             </div>
 
             <div class="charts-grid">
@@ -262,5 +365,78 @@
             <p>B-Xtrender indicator based on work by <a href="https://www.tradingview.com/script/YHZimEz8-B-Xtrender-Puppytherapy/" target="_blank">@Puppytherapy</a></p>
         </div>
     </div>
+
+    <script>
+        // File upload functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const uploadBtn = document.getElementById('uploadBtn');
+            const fileInput = document.getElementById('csvFileInput');
+            const fileStatus = document.getElementById('fileStatus');
+            const uploadFeedback = document.getElementById('uploadFeedback');
+
+            // Check current data status on load
+            checkDataStatus();
+
+            uploadBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    uploadFile(file);
+                }
+            });
+
+            async function uploadFile(file) {
+                const formData = new FormData();
+                formData.append('csvFile', file);
+
+                try {
+                    uploadFeedback.textContent = 'Uploading...';
+                    uploadFeedback.className = 'upload-feedback';
+
+                    const response = await fetch('/api/upload-data', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        fileStatus.textContent = `Using: ${file.name} (${result.dataPoints} data points)`;
+                        fileStatus.className = 'file-status uploaded';
+                        uploadFeedback.textContent = result.message;
+                        uploadFeedback.className = 'upload-feedback success';
+                    } else {
+                        uploadFeedback.textContent = result.error;
+                        uploadFeedback.className = 'upload-feedback error';
+                    }
+                } catch (error) {
+                    uploadFeedback.textContent = 'Upload failed. Please try again.';
+                    uploadFeedback.className = 'upload-feedback error';
+                }
+            }
+
+            async function checkDataStatus() {
+                try {
+                    const response = await fetch('/api/data-info');
+                    const result = await response.json();
+
+                    if (result.success) {
+                        if (result.hasUploadedData) {
+                            fileStatus.textContent = 'Using uploaded CSV data';
+                            fileStatus.className = 'file-status uploaded';
+                        } else {
+                            fileStatus.textContent = 'Using default Tesla data';
+                            fileStatus.className = 'file-status';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking data status:', error);
+                }
+            }
+        });
+    </script>
 </body>
 </html> 

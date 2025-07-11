@@ -29,6 +29,7 @@
   },
   "homepage": "https://github.com/vibe-coderx/B-Xtrender-Backtester#readme",
   "dependencies": {
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "multer": "^2.0.1"
   }
 }

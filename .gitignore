@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# Uploaded data files
+uploads/
+
 # Cloned lightweight-charts repository (not needed in our repo)
 lightweight-charts/
 
